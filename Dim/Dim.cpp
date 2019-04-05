@@ -3,7 +3,7 @@
 template <int N>
 struct Dim1 {
     constexpr static int n_dims = 1;
-    constexpr static int d0 = N; 
+    constexpr static int d0 = N;
 };
 
 template <int N1, int N2>
@@ -27,6 +27,10 @@ struct Dim3 {
     Dim3(const int i): x(i) {}
 };
 
+int foo() {
+    return Dim2<20, 20>().get<0>();
+}
+
 int main() {
     printf("%d\n", Dim1<10>::d0);
     printf("%d, %d\n", Dim2<10, 20>::d0, Dim2<10, 20>::d1);
@@ -34,5 +38,6 @@ int main() {
     printf("%d, %d, %d\n", decltype(dim2)::n_dims, decltype(dim2)::d0, decltype(dim2)::d1);
     printf("%d, %d\n", dim2.get<0>(), dim2.get<1>());
     auto dim3 = Dim3(10);
+    printf("sizeof(dim2) = %ld\n", sizeof(dim2));
     return 0;
 }
