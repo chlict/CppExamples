@@ -9,12 +9,14 @@ constexpr int fact1<0> = 1;
 constexpr int fact2(int n) {
 	int result = 1;
 	for (int i = 1; i <= n; i++) {
+		// printf("fact2: i = %d\n", i);  // ok - runtime execution
 		result *= i;
 	}
 	return result;
 }
 
 constexpr int fact3(int n) {
+	// printf("fact3(%d)\n", n);  // fail: compile error
 	return n < 1 ? 1 : n * fact3(n - 1);
 }
 
