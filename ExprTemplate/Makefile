@@ -1,3 +1,4 @@
+OPT=-O2 -DDebug
 all:
-	clang++ -O2 -std=c++17 Expr.cpp -S -emit-llvm
-	clang++ -O2 -std=c++17 Expr.cpp
+	clang++ ${OPT} -std=c++17 Expr.cpp -S -emit-llvm
+	clang++ ${OPT} -std=c++17 Expr.cpp

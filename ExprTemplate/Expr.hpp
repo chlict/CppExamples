@@ -15,6 +15,26 @@ enum ExprOp {
 };
 
 template <typename Expr>
+constexpr bool isConstant() {
+    return Expr::op == Constant;
+}
+
+template <typename Expr>
+constexpr bool isVar() {
+    return Expr::op == Var;
+}
+
+template <typename Expr>
+constexpr bool isUnary() {
+    return Expr::op == Neg;
+}
+
+template <typename Expr>
+constexpr bool isBinary() {
+    return Expr::op == Add;
+}
+
+template <typename Expr>
 struct ExprBase {
     using ExprType = Expr;
     static constexpr ExprOp op = Expr::op;
@@ -95,41 +115,46 @@ struct BinaryExpr: public ExprBase<BinaryExpr<Op, LeftExpr, RightExpr>> {
         : left(left), right(right) {}
 
     void dump(int indent = 0) const {
+#ifdef Debug
         Indent(indent);
         printf("Binary<%d>\n", (int)op);
         left.dump(indent + 4);
         right.dump(indent + 4);
+#endif
     }
 };
 
 template <typename Expr>
 struct Evaluator {
     const ExprBase<Expr> &baseExpr;
+
     Evaluator(const Expr &expr): baseExpr(expr) {
+#ifdef Debug
         char *name = abi::__cxa_demangle(typeid(Expr).name(), 0, 0, nullptr);
         printf("Constructing evaluator for type %s\n", name);
         free(name);
+#endif
     }
+
     void Eval() const {
-        constexpr ExprOp op = ExprBase<Expr>::op;
-        if constexpr (op == Add) {
+        if constexpr (isBinary<Expr>()) {
             auto binaryExpr = baseExpr.getWrappedExpr();
             auto leftEval = Evaluator<typename decltype(binaryExpr)::LeftOpndTyep>(binaryExpr.left);
             auto rightEval = Evaluator<typename decltype(binaryExpr)::RightOpndType>(binaryExpr.right);
             leftEval.Eval();
             rightEval.Eval();
         }
-        if constexpr (op == Neg) {
+        if constexpr (isUnary<Expr>()) {
             auto unaryExpr = baseExpr.getWrappedExpr();
             using OpndType = typename decltype(unaryExpr)::OpndType;
             auto subEval = Evaluator<OpndType>(unaryExpr.opnd);
             subEval.Eval();
         }
-        if constexpr (op == Var) {
+        if constexpr (isVar<Expr>()) {
             auto varExpr = baseExpr.getWrappedExpr();
             varExpr.dump();
         }
-        if constexpr (op == Constant) {
+        if constexpr (isConstant<Expr>()) {
             auto constExpr = baseExpr.getWrappedExpr();
             constExpr.dump();
         }
