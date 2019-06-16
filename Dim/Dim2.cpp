@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <iostream>
 #include <tuple>
 #include <type_traits>
 #include <boost/hana.hpp>
@@ -79,6 +80,27 @@ public:
     }
 };
 
+template <int n, class ... T>
+struct DimN {
+    static_assert(n == sizeof...(T), "must match");
+    boost::hana::tuple<T...> tpl;
+public:
+    DimN(T... args) : tpl(args...) {}
+
+    static constexpr auto nDims = n;
+
+    template <int i>
+    auto get() {
+        return tpl[int_c<i>];
+    }
+};
+
+template <class ... T>
+struct Dim1 : public DimN<1, T...> {
+public:
+    Dim1(T... args) : DimN<1, T...>(args...) {}
+};
+
 template <int i, typename Dims>
 const auto get(Dims dims) {
     static_assert(i >= 0 && i < Dims::NDims(), "bounds check");
@@ -123,6 +145,15 @@ void TestDim2() {
     // PrintTypeName(z);
 }
 
+void TestDimN() {
+    auto x = DimN<2, decltype(int_c<3>), decltype(int_c<4>)>(int_c<3>, int_c<4>);
+    PrintTypeName(x);
+    std::cout << x.get<0>() << ", " << x.get<1>() << std::endl;
+
+    auto x2 = Dim1(int_c<1>);
+    PrintTypeName(x2);
+    std::cout << x2.get<0>() << std::endl;
+}
 void TestNchw() {
     auto nchw1 = NCHW{int_c<1>, int_c<2>, int_c<3>, int_c<4>};
     printf("n:%d, c:%d, h:%d, w:%d\n",
@@ -145,4 +176,5 @@ int main() {
     // printf("x.isConstexpr = %d, y.isConstexpr = %d\n", (int)x.isConstexpr, (int)y.isConstexpr);
     TestDim2();
     TestNchw();
+    TestDimN();
 }
