@@ -11,5 +11,5 @@ template <>
 constexpr int Fun<B> = 2;
 
 int main() {
-	return Fun<A>;
+    return Fun<A>;
 }

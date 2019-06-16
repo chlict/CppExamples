@@ -17,7 +17,6 @@ int main() {
     auto compute_3 = BinaryExpr<Add, decltype(compute_2), decltype(var_1)>(compute_2, var_1);
     compute_3.dump();
 
-    // auto evaluator = Evaluator<decltype(compute_3)>(compute_3);
     auto eval = Evaluator<decltype(num_1)>(num_1);
     eval.Eval();
     auto eval2 = Evaluator<decltype(var_1)>(var_1);
