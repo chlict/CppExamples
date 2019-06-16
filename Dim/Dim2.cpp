@@ -1,18 +1,20 @@
 #include <cstdio>
 #include <tuple>
 #include <type_traits>
+#include <boost/hana.hpp>
+#include <cassert>
+#include "../Utils.hpp"
 
 template <int i>
-using ConstInt = std::integral_constant<int, i>;
+using ConstInt = boost::hana::integral_constant<int, i>;
 
 template <int i>
 constexpr ConstInt<i> int_c {};
 
+// Types other than ConstInt, including int and const int, are
+// not ConstInt.
 template <typename T>
-struct IsConstInt;
-
-template <>
-struct IsConstInt<int> {
+struct IsConstInt {
     static constexpr bool value = false;
 };
 
@@ -37,7 +39,12 @@ public:
         return Dim2<decltype(v0), decltype(v1)>(v0, v1);
     }
 
-    auto ToTuple() {
+    template <typename Y0, typename Y1>
+    bool operator== (const Dim2<Y0, Y1> &other) {
+        return (d0 == other.d0 && d1 == other.d1);
+    }
+
+    auto toTuple() {
         return std::make_tuple(d0, d1);
     }
 };
@@ -48,9 +55,8 @@ struct Dim4 {
     const D1 d1;
     const D2 d2;
     const D3 d3;
-    std::tuple<D0, D1, D2, D3> dim4;
 public:
-    Dim4(D0 d0, D1 d1, D2 d2, D3 d3) : d0(d0), d1(d1), d2(d2), d3(d3), dim4(d0, d1, d2, d3) {}
+    Dim4(D0 d0, D1 d1, D2 d2, D3 d3) : d0(d0), d1(d1), d2(d2), d3(d3) {}
 
     static constexpr int NDims() { return 4; }
 
@@ -63,16 +69,20 @@ public:
         return Dim4<decltype(v0), decltype(v1), decltype(v2), decltype(v3)>(v0, v1, v2, v3);
     }
 
-    auto ToTuple() {
-        // return std::make_tuple(d0, d1, d2, d3);
-        return dim4;
+    template <typename Y0, typename Y1, typename Y2, typename Y3>
+    bool operator== (const Dim4<Y0, Y1, Y2, Y3> &other) {
+        return d0 == other.d0 && d1 == other.d1 && d2 == other.d2 && d3 == other.d3;
+    }
+
+    auto toTuple() {
+        return std::make_tuple(d0, d1, d2, d3);
     }
 };
 
 template <int i, typename Dims>
 const auto get(Dims dims) {
     static_assert(i >= 0 && i < Dims::NDims(), "bounds check");
-    auto values = dims.ToTuple();
+    auto values = dims.toTuple();
     return std::get<i>(values);
 }
 
@@ -104,11 +114,28 @@ public:
     auto GetW() { return get<3>(dim4); }
 };
 
+void TestDim2() {
+    auto x = Dim2{int_c<1>, int_c<2>};
+    auto y = Dim2{int_c<3>, int_c<4>};
+    auto z = x + y;
+    static_assert(z.d0 == int_c<4> && z.d1 == int_c<6>);
+    assert((z == Dim2(int_c<4>, int_c<6>)));
+    // PrintTypeName(z);
+}
+
 void TestNchw() {
     auto nchw1 = NCHW{int_c<1>, int_c<2>, int_c<3>, int_c<4>};
     printf("n:%d, c:%d, h:%d, w:%d\n",
-        (int)nchw1.GetN(), (int)nchw1.GetC(), (int)GetH(), (int)GetW();
+        (int)nchw1.GetN(), (int)nchw1.GetC(), (int)nchw1.GetH(), (int)nchw1.GetW());
+    PrintTypeName(nchw1);
+
+    auto nchw2 = NCHW(1, 2, 3, 4);
+    PrintTypeName(nchw2);
+
+    // auto nchw3 = nchw1 + nchw2;
+    // PrintTypeName(nchw3);
 }
+
 int main() {
     auto x = Dim2{int_c<2>, int_c<4>};
     printf("d0 = %d, d1 = %d\n", (int)x.d0, (int)x.d1);
@@ -116,5 +143,6 @@ int main() {
     int a[6] = {1, 2};
     printf("a[d0] = %d\n", a[get<0>(x)]);
     // printf("x.isConstexpr = %d, y.isConstexpr = %d\n", (int)x.isConstexpr, (int)y.isConstexpr);
+    TestDim2();
     TestNchw();
 }
