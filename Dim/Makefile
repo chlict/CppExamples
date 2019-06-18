@@ -1,2 +1,2 @@
 all:
-	g++ -std=c++17 Dim2.cpp
+	g++ -std=c++17 -I${HOME}/install/hana/include Dims.cpp

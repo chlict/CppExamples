@@ -6,6 +6,7 @@
 #include "../Utils.hpp"
 
 using namespace boost;
+using namespace boost::hana::literals;
 
 template <int i>
 using ConstInt = boost::hana::integral_constant<int, i>;
@@ -25,6 +26,10 @@ struct IsConstInt<ConstInt<i>> {
     static constexpr bool value = true;
 };
 
+
+template <class... T>
+auto MakeDimN(boost::hana::tuple<T...> tpl);
+
 template <class ... T>
 class DimN {
 public:
@@ -43,9 +48,20 @@ public:
     
     template <class ... T2>
     auto operator+ (DimN<T2...> other) {
-        return boost::hana::zip_with(boost::hana::mult, tpl, other.tpl);
+        auto r = boost::hana::zip_with(boost::hana::mult, tpl, other.tpl);
+        return MakeDimN(r);
     }
 };
+
+template <class... T>
+struct DimN2 : public boost::hana::tuple<T...> {
+    DimN2(T... args) : boost::hana::tuple<T...>(args...) {}
+};
+
+template <class... T>
+auto MakeDimN(boost::hana::tuple<T...> tpl) {
+    return DimN<T...>(tpl);
+}
 
 template <class ... T>
 class Dim1 : public DimN<T...> {
@@ -59,7 +75,7 @@ class Dim2 : public DimN<T...> {
     static_assert(sizeof...(T) == 2);
 public:
     Dim2(T... args) : DimN<T...>(args...) {}
-    Dim2(hana::tuple)
+    // Dim2(hana::tuple<T...> tpl) : DimN<T...>(tpl) {}
 };
 
 void TestDim1(int v) {
@@ -90,10 +106,14 @@ void TestDim2(int var) {
     auto y = Dim2{int_c<3>, int_c<4>};
     auto z = x + y;
     PrintTypeName(z);
-    auto x2 = DimN{z};
-    PrintTypeName(x2);
+    if constexpr (z.tpl[int_c<0>] == int_c<3>) { printf("constexpr ok\n"); }
+    // if constexpr (z.get<0>() == int_c<3>) { printf("get constexpr ok\n"); }
+    // if constexpr (x == y) { printf("test equals ok\n"); }
+    auto x2 = Dim2{1, 2};
+    if (x2.tpl[int_c<0>] == 2) {}
 }
+
 int main() {
-    TestDim1(0);
+    // TestDim1(0);
     TestDim2(0);
 }
