@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cstdio>
+#include <cstdlib>
 #include <cxxabi.h>
+#include <typeinfo>
 
 template <typename T>
 void PrintTypeName(T t) {
