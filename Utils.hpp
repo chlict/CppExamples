@@ -10,3 +10,10 @@ void PrintTypeName(T t) {
     free(name);
 }
 
+template <typename T>
+void PrintTypeName() {
+    char *name = abi::__cxa_demangle(typeid(T).name(), 0, 0, nullptr);
+    printf("Type: %s\n", name);
+    free(name);
+}
+
